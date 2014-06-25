@@ -1,17 +1,32 @@
 package cz.vainee.infodorik;
 
-import android.support.v7.app.ActionBarActivity;
-import android.support.v7.app.ActionBar;
-import android.support.v4.app.Fragment;
+import java.io.BufferedReader;
+import java.io.InputStreamReader;
+import java.net.HttpURLConnection;
+import java.net.MalformedURLException;
+import java.net.URL;
+
+import android.content.Context;
+import android.content.Intent;
+import android.content.SharedPreferences;
+import android.os.AsyncTask;
 import android.os.Bundle;
+import android.preference.PreferenceManager;
+import android.support.v4.app.Fragment;
+import android.support.v7.app.ActionBarActivity;
 import android.view.LayoutInflater;
 import android.view.Menu;
 import android.view.MenuItem;
 import android.view.View;
 import android.view.ViewGroup;
-import android.os.Build;
+import android.widget.TextView;
+import android.widget.Toast;
+//import org.apache.commons.io.IOUtils;
 
 public class MainActivity extends ActionBarActivity {
+	
+	// the tag to be used in the application logs
+	private static final String TAG = "InfOdorik";
 
 	@Override
 	protected void onCreate(Bundle savedInstanceState) {
@@ -39,8 +54,18 @@ public class MainActivity extends ActionBarActivity {
 		// as you specify a parent activity in AndroidManifest.xml.
 		int id = item.getItemId();
 		if (id == R.id.action_settings) {
+			Intent intent = new Intent(MainActivity.this,
+					SettingsActivity.class);
+			startActivity(intent);
+
+			/*Toast.makeText(this, "Updating the textview",
+			                Toast.LENGTH_LONG).show();
+					updateSettingsInTextView();*/
+
 			return true;
 		}
+		Toast.makeText(this, "Ne, neni to settins.",
+				Toast.LENGTH_LONG).show();
 		return super.onOptionsItemSelected(item);
 	}
 
@@ -60,5 +85,116 @@ public class MainActivity extends ActionBarActivity {
 			return rootView;
 		}
 	}
+	
+	/** Called when the user clicks the Balance button */
+	public void printBalance(View view) {
+		//Intent intent = new Intent(this, DisplayMessageActivity.class);
+		//System.out.println("InfOdorik debug message - println");
+		android.util.Log.d(TAG, "InfOdorik debug message");
+		
+		TextView tv1 = (TextView) findViewById(R.id.textView1);
+		tv1.append("Checking your balance ... ");
+		
+		try {
+			SharedPreferences prefs = PreferenceManager.getDefaultSharedPreferences(this);
+
+			String username = prefs.getString("pref_username", "");
+			String passw = prefs.getString("pref_password", "");
+
+			StringBuilder urlBuilder = new StringBuilder("https://www.odorik.cz/api/v1/balance?user=");
+			urlBuilder.append(username);
+			urlBuilder.append("&password=");
+			urlBuilder.append(passw);
+			URL odorikUrl = new URL(urlBuilder.toString());
+			
+			//System.out.println(urlBuilder.toString());
+			//android.util.Log.d(TAG, urlBuilder.toString());
+			
+			new HttpHandlerLocal().execute(odorikUrl);
+		}
+		catch (MalformedURLException e)
+		{
+			android.util.Log.e(TAG, "Unknown balance request(" + e.getMessage() + ")", e);
+		}
+		
+		/*URLConnection urlConnection = url.openConnection();
+		urlConnection.addRequestProperty("user", "123456");
+		urlConnection.addRequestProperty("password", "abcdefg");*/
+		
+		
+		//tv1.append("Balance: " + this.handleBalanceMessage() + "\n");
+	}
+	
+
+	
+	private class HttpHandlerLocal extends AsyncTask<URL, Integer, String> {
+
+		@Override
+		protected String doInBackground(URL... params) {
+			StringBuilder rv = new StringBuilder();
+			for (URL oneUrl : params) {
+				rv.append(handleBalanceMessage(oneUrl));
+			}
+			return rv.toString();
+		}
+		
+		@Override
+		protected void onPostExecute(String result) {
+			TextView tv1 = (TextView) findViewById(R.id.textView1);
+			Float balance;
+			try {
+				balance = Float.parseFloat(result);
+			}
+			catch (NumberFormatException exception) {
+				
+				return;
+			}
+			
+			tv1.getContext();
+			// store the value for the next time when we will be offline (synchronization outage)
+			//Context context = getActivity();
+			SharedPreferences sharedPref = tv1.getContext().getSharedPreferences(
+			        getString(R.string.preference_file_key), Context.MODE_PRIVATE);
+			SharedPreferences.Editor editor = sharedPref.edit();
+			editor.putFloat("balance", balance);
+			editor.commit();
+			
+			
+			
+			
+			
+			tv1.append(result + "\n");
+		}
+		
+		private String handleBalanceMessage(URL url) {
+			StringBuilder rv = new StringBuilder();
+			
+			try {
+				HttpURLConnection urlConnection = (HttpURLConnection) url.openConnection();
+
+				BufferedReader inBufReader = new BufferedReader(new InputStreamReader(
+						urlConnection.getInputStream()));
+				String inputLine;
+				while ((inputLine = inBufReader.readLine()) != null)
+				{
+					//System.out.println(inputLine);
+					rv.append(inputLine + "\n");
+				}
+				urlConnection.disconnect();
+			}
+			catch (Exception e)
+			{
+				System.out.println(e.getMessage());
+			}
+
+			if (rv.length()>0)
+				return rv.toString();
+			else
+				return "<NOTHING>\n";
+		}
+	
+	}
+	
+	
 
 }
