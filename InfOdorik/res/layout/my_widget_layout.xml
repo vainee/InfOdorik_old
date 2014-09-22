@@ -8,13 +8,17 @@
         android:id="@+id/textview_credit"
         android:layout_width="fill_parent"
         android:layout_height="wrap_content"
-        android:text="@string/textview_label" />
+        android:gravity="center"
+        android:text="@string/textview_label"
+        android:textSize="@dimen/widget_credit_text_size" />
 
+<!-- 
     <Button
         android:id="@+id/button1"
         style="?android:attr/buttonStyleSmall"
         android:layout_width="fill_parent"
         android:layout_height="wrap_content"
         android:text="@string/button_refresh" />
+-->
 
 </LinearLayout>

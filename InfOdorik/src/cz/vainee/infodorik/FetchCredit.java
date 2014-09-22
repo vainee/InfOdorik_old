@@ -10,8 +10,11 @@ import java.net.URL;
 
 import android.appwidget.AppWidgetManager;
 import android.content.ComponentName;
+import android.content.Context;
+import android.content.SharedPreferences;
 //import android.content.ComponentName;
 import android.os.AsyncTask;
+import android.preference.PreferenceManager;
 import android.widget.RemoteViews;
 
 /**
@@ -23,6 +26,7 @@ public class FetchCredit extends AsyncTask<URL, Integer, String> {
 	private AppWidgetManager appWidgetManager;
 	private RemoteViews remoteViews;
     private ComponentName watchWidget;
+    private Context context;
     
 	/**
 	 * @param appWidgetManager
@@ -32,12 +36,14 @@ public class FetchCredit extends AsyncTask<URL, Integer, String> {
 	public FetchCredit(
 			AppWidgetManager appWidgetManager,
 			RemoteViews remoteViews,
-			ComponentName watchWidget) {
+			ComponentName watchWidget,
+			Context context) {
 		
 		super();
 		this.appWidgetManager = appWidgetManager;
 		this.remoteViews = remoteViews;
 		this.watchWidget = watchWidget;
+		this.context = context;
 	}
 
 	@Override
@@ -79,10 +85,22 @@ public class FetchCredit extends AsyncTask<URL, Integer, String> {
 			System.out.println(e.getMessage());
 		}
 
+		
+		SharedPreferences prefs = PreferenceManager.getDefaultSharedPreferences(context);
 		if (rv.length()>0)
-			return rv.toString();
+		{
+			String balanceString = rv.toString();
+			SharedPreferences.Editor editor = prefs.edit();
+			editor.putString("balance", balanceString);
+			editor.commit();
+			
+			return balanceString;
+		}
 		else
-			return "<NOTHING>\n";
+		{
+			String balanceString = prefs.getString("balance", "???");
+			return balanceString/*+":\n"*/;
+		}
 	}
     
     

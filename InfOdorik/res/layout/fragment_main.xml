@@ -3,8 +3,48 @@
     android:layout_width="match_parent"
     android:layout_height="match_parent"
     android:orientation="vertical" >
+<!--
+    <android.widget.TextView
+        android:id="@+id/textView1"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:text="Medium Text"
+        android:textAppearance="?android:attr/textAppearanceMedium" />
 
-    <ScrollView
+    <android.widget.TextView
+        android:id="@+id/textView2"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:text="Medium Text"
+        android:textAppearance="?android:attr/textAppearanceMedium" />
+-->
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        >
+
+        <Button
+            android:id="@+id/buttonBalance"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:onClick="printBalance"
+            android:text="@string/button_balance" />
+         <Button
+            android:id="@+id/buttonLines"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:onClick="printLines"
+            android:text="@string/button_lines" />
+        <Button
+            android:id="@+id/buttonCallLog"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:onClick="printCallLog"
+            android:text="@string/button_calls" />
+
+    </LinearLayout>
+
+	<ScrollView
         android:id="@+id/scrollView1"
         android:layout_width="wrap_content"
         android:layout_height="0dp"
@@ -13,15 +53,9 @@
         <TextView
             android:id="@+id/textView1"
             android:layout_width="wrap_content"
-	       	android:layout_height="wrap_content" />
+            android:layout_height="wrap_content"
+            android:text="abcdefgh" />
 
     </ScrollView>
     
-    <Button
-        android:id="@+id/buttonBalance"
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:text="@string/button_balance"
-        android:onClick="printBalance" />
-
 </LinearLayout>

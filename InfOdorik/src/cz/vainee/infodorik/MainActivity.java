@@ -6,7 +6,6 @@ import java.net.HttpURLConnection;
 import java.net.MalformedURLException;
 import java.net.URL;
 
-import android.content.Context;
 import android.content.Intent;
 import android.content.SharedPreferences;
 import android.os.AsyncTask;
@@ -14,6 +13,7 @@ import android.os.Bundle;
 import android.preference.PreferenceManager;
 import android.support.v4.app.Fragment;
 import android.support.v7.app.ActionBarActivity;
+//import android.support.v7.app.ActionBarActivity;
 import android.view.LayoutInflater;
 import android.view.Menu;
 import android.view.MenuItem;
@@ -34,9 +34,11 @@ public class MainActivity extends ActionBarActivity {
 		setContentView(R.layout.activity_main);
 
 		if (savedInstanceState == null) {
+			
 			getSupportFragmentManager().beginTransaction()
 					.add(R.id.container, new PlaceholderFragment()).commit();
 		}
+
 	}
 
 	@Override
@@ -52,6 +54,15 @@ public class MainActivity extends ActionBarActivity {
 		// Handle action bar item clicks here. The action bar will
 		// automatically handle clicks on the Home/Up button, so long
 		// as you specify a parent activity in AndroidManifest.xml.
+
+		
+ 		
+/*		Intent intent = new Intent(MainActivity.this,
+				SettingsActivity.class);
+		startActivity(intent);
+*/
+		
+		// TODO: why the ID does not match?		
 		int id = item.getItemId();
 		if (id == R.id.action_settings) {
 			Intent intent = new Intent(MainActivity.this,
@@ -64,7 +75,7 @@ public class MainActivity extends ActionBarActivity {
 
 			return true;
 		}
-		Toast.makeText(this, "Ne, neni to settins.",
+		Toast.makeText(this, "Ne, neni to settings.",
 				Toast.LENGTH_LONG).show();
 		return super.onOptionsItemSelected(item);
 	}
@@ -125,6 +136,87 @@ public class MainActivity extends ActionBarActivity {
 		//tv1.append("Balance: " + this.handleBalanceMessage() + "\n");
 	}
 	
+	
+	/** Called when the user clicks the Lines button */
+	public void printLines(View view) {
+		//Intent intent = new Intent(this, DisplayMessageActivity.class);
+		//System.out.println("InfOdorik debug message - println");
+		android.util.Log.d(TAG, "InfOdorik debug message");
+		
+		TextView tv1 = (TextView) findViewById(R.id.textView1);
+		tv1.append("Checking your lines ... ");
+		
+		try {
+			SharedPreferences prefs = PreferenceManager.getDefaultSharedPreferences(this);
+
+			String username = prefs.getString("pref_username", "");
+			String passw = prefs.getString("pref_password", "");
+
+			StringBuilder urlBuilder = new StringBuilder("https://www.odorik.cz/api/v1/lines?user=");
+			urlBuilder.append(username);
+			urlBuilder.append("&password=");
+			urlBuilder.append(passw);
+			URL odorikUrl = new URL(urlBuilder.toString());
+			
+			//System.out.println(urlBuilder.toString());
+			//android.util.Log.d(TAG, urlBuilder.toString());
+			
+			new HttpHandlerLocal().execute(odorikUrl);
+		}
+		catch (MalformedURLException e)
+		{
+			android.util.Log.e(TAG, "Unknown lines request(" + e.getMessage() + ")", e);
+		}
+		
+		/*URLConnection urlConnection = url.openConnection();
+		urlConnection.addRequestProperty("user", "123456");
+		urlConnection.addRequestProperty("password", "abcdefg");*/
+		
+		
+		//tv1.append("Balance: " + this.handleBalanceMessage() + "\n");
+	}
+	
+	/** Called when the user clicks the CallLog button */
+	public void printCallLog(View view) {
+		//Intent intent = new Intent(this, DisplayMessageActivity.class);
+		//System.out.println("InfOdorik debug message - println");
+		android.util.Log.d(TAG, "InfOdorik debug message");
+		
+		TextView tv1 = (TextView) findViewById(R.id.textView1);
+		tv1.append("Checking calls ... ");
+		
+		try {
+			SharedPreferences prefs = PreferenceManager.getDefaultSharedPreferences(this);
+
+			String username = prefs.getString("pref_username", "");
+			String passw = prefs.getString("pref_password", "");
+
+			//https://www.odorik.cz/api/v1/calls.csv?user=123456&password=abcdefgh&from=2014-07-01T00:00:00&to=2014-07-31T23:59:59
+			StringBuilder urlBuilder = new StringBuilder("https://www.odorik.cz/api/v1/calls.csv?user=");
+			urlBuilder.append(username);
+			urlBuilder.append("&password=");
+			urlBuilder.append(passw);
+			urlBuilder.append("&from=2014-07-20T00:00:00&to=2014-07-31T23:59:59");
+			URL odorikUrl = new URL(urlBuilder.toString());
+			
+			//System.out.println(urlBuilder.toString());
+			//android.util.Log.d(TAG, urlBuilder.toString());
+			
+			new HttpHandlerLocal().execute(odorikUrl);
+		}
+		catch (MalformedURLException e)
+		{
+			android.util.Log.e(TAG, "Unknown balance request(" + e.getMessage() + ")", e);
+		}
+		
+		/*URLConnection urlConnection = url.openConnection();
+		urlConnection.addRequestProperty("user", "123456");
+		urlConnection.addRequestProperty("password", "abcdefg");*/
+		
+		
+		//tv1.append("Balance: " + this.handleBalanceMessage() + "\n");
+	}
+	
 
 	
 	private class HttpHandlerLocal extends AsyncTask<URL, Integer, String> {
@@ -133,7 +225,7 @@ public class MainActivity extends ActionBarActivity {
 		protected String doInBackground(URL... params) {
 			StringBuilder rv = new StringBuilder();
 			for (URL oneUrl : params) {
-				rv.append(handleBalanceMessage(oneUrl));
+				rv.append(handleHttpMessage(oneUrl));
 			}
 			return rv.toString();
 		}
@@ -141,7 +233,7 @@ public class MainActivity extends ActionBarActivity {
 		@Override
 		protected void onPostExecute(String result) {
 			TextView tv1 = (TextView) findViewById(R.id.textView1);
-			Float balance;
+/*			Float balance;
 			try {
 				balance = Float.parseFloat(result);
 			}
@@ -149,24 +241,23 @@ public class MainActivity extends ActionBarActivity {
 				
 				return;
 			}
+*/
 			
 			tv1.getContext();
 			// store the value for the next time when we will be offline (synchronization outage)
 			//Context context = getActivity();
+			/*
 			SharedPreferences sharedPref = tv1.getContext().getSharedPreferences(
 			        getString(R.string.preference_file_key), Context.MODE_PRIVATE);
 			SharedPreferences.Editor editor = sharedPref.edit();
 			editor.putFloat("balance", balance);
 			editor.commit();
-			
-			
-			
-			
+			*/
 			
 			tv1.append(result + "\n");
 		}
 		
-		private String handleBalanceMessage(URL url) {
+		private String handleHttpMessage(URL url) {
 			StringBuilder rv = new StringBuilder();
 			
 			try {
@@ -190,7 +281,7 @@ public class MainActivity extends ActionBarActivity {
 			if (rv.length()>0)
 				return rv.toString();
 			else
-				return "<NOTHING>\n";
+				return "-----";
 		}
 	
 	}
