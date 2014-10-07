@@ -217,6 +217,22 @@ public class MainActivity extends ActionBarActivity {
 		//tv1.append("Balance: " + this.handleBalanceMessage() + "\n");
 	}
 	
+	/** Called when the user clicks the Balance button */
+	public void startService(View view) {
+		//Intent intent = new Intent(this, DisplayMessageActivity.class);
+		//System.out.println("InfOdorik debug message - println");
+		android.util.Log.d(TAG, "InfOdorik is starting the service...");
+		
+		TextView tv1 = (TextView) findViewById(R.id.textView1);
+		tv1.append("Starting the service ... ");
+		
+		Intent startServiceIntent = new Intent(this, InfOdorikService.class);
+		startService(startServiceIntent);
+		
+		tv1.append("the service was hopefully started.\n");
+		android.util.Log.d(TAG, "InfOdorik service has been started.");
+	}
+	
 
 	
 	private class HttpHandlerLocal extends AsyncTask<URL, Integer, String> {

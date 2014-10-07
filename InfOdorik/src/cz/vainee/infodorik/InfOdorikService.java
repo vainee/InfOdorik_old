@@ -13,9 +13,13 @@ import android.widget.Toast;
  */
 public class InfOdorikService extends IntentService {
 	
+	// the tag to be used in the application logs
+	private static final String TAG = "InfOdorik_Service";
+	
 	
 	public InfOdorikService(String name) {
 		super(name);
+		android.util.Log.d(TAG, "InfOdorikService constructor ######");
 		// TODO Auto-generated constructor stub
 	}
 	
@@ -34,6 +38,13 @@ public class InfOdorikService extends IntentService {
 		}
 */
 		Toast.makeText(getBaseContext(), "onHandleIntent", Toast.LENGTH_LONG).show();
+		
+		android.util.Log.d(TAG, "InfOdorikService::onHandleIntent ######");
+		
+		/*TextView tv1 = (TextView) findViewById(R.id.textView1);
+		tv1.append("\nInfOdorikService::onHandleIntent ######\n");
+		*/
+		
 	}
 	
 	

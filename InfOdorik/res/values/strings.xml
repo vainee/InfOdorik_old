@@ -20,5 +20,6 @@
     <string name="preference_file_key">cz.vainee.infodorik.preferences</string>
     <string name="last_success_sync_credit">cz.vainee.infodorik.preferences</string>
     <string name="service_name">InfOdorik service</string>
+    <string name="button_service_start">Start service</string>
     
 </resources>

@@ -41,6 +41,12 @@
             android:layout_height="wrap_content"
             android:onClick="printCallLog"
             android:text="@string/button_calls" />
+        <Button
+            android:id="@+id/buttonService"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:onClick="startService"
+            android:text="@string/button_service_start" />
 
     </LinearLayout>
 
@@ -54,7 +60,7 @@
             android:id="@+id/textView1"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:text="abcdefgh" />
+            android:text="" />
 
     </ScrollView>
     
