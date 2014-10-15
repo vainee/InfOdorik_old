@@ -42,7 +42,7 @@
         </receiver>
 
         <service
-            android:name=".InfodorikService"
+            android:name="InfOdorikService"
             android:icon="@drawable/icon"
             android:label="@string/service_name" >
         </service>
