@@ -3,6 +3,7 @@
  */
 package cz.vainee.infodorik;
 
+import cz.vainee.infodorik.MainActivity.HttpHandlerLocal;
 import android.app.IntentService;
 import android.app.Notification;
 import android.app.NotificationManager;
@@ -21,6 +22,15 @@ public class InfOdorikService extends IntentService {
 	
 	// the tag to be used in the application logs
 	private static final String TAG = "InfOdorik_Service";
+	
+	// API basic url
+	// TODO: completely replace with API class
+	private static final String API_URL = "https://www.odorik.cz/api/v1/";
+	
+	// Service interface definition
+	public static final String SERVICE_METHOD = "method";
+	// TODO: temporary, define methods using enum
+	public static final String SERVICE_METHOD_UPDATE = "update";
 	
 	
 /*	@Override
@@ -58,7 +68,18 @@ public class InfOdorikService extends IntentService {
 */
 		android.util.Log.d(TAG, "InfOdorikService::onHandleIntent ######");
 		
-		Toast.makeText(getBaseContext(), "onHandleIntent", Toast.LENGTH_LONG).show();
+		//Toast.makeText(getBaseContext(), "onHandleIntent", Toast.LENGTH_LONG).show();
+		
+		// Select the appropriate method
+		String method = intent.getStringExtra(SERVICE_METHOD);
+		if (method == SERVICE_METHOD_UPDATE)
+			
+				;
+				break;
+			default:
+				;
+				break;
+		}
 		
 
 		/*TextView tv1 = (TextView) findViewById(R.id.textView1);
@@ -110,4 +131,74 @@ public class InfOdorikService extends IntentService {
 		return null;
 	}
 */
+	
+	/**
+	 * method_udate - update the basic information from Odorik API
+	 * TODO: cache/store the updated information for later use
+	 */
+	private void method_update()
+	{
+		method_update_credit();
+		method_update_lines();
+		method_update_CallLog();
+		method_update_data();
+		
+		// TODO: refresh the widget / broadcast the "data updated" event to others
+	}
+	
+	
+	private void method_update_credit() {
+		android.util.Log.d(TAG, "method_update_credit entered");
+		
+//		TextView tv1 = (TextView) findViewById(R.id.textView1);
+//		tv1.append("Checking your balance ... ");
+		
+		try {
+			SharedPreferences prefs = PreferenceManager.getDefaultSharedPreferences(this);
+
+			String username = prefs.getString("pref_username", "");
+			String passw = prefs.getString("pref_password", "");
+
+			StringBuilder urlBuilder = new StringBuilder(API_URL);
+			urlBuilder.append("balance?user=");
+			urlBuilder.append(username);
+			urlBuilder.append("&password=");
+			urlBuilder.append(passw);
+			URL odorikUrl = new URL(urlBuilder.toString());
+			
+			new HttpHandlerLocal().execute(odorikUrl);
+		}
+		catch (MalformedURLException e)
+		{
+			android.util.Log.e(TAG, "Unknown credit request(" + e.getMessage() + ")", e);
+		}
+		
+		// try to get the credit
+		StringBuilder rv = new StringBuilder();
+		for (URL oneUrl : params) {
+			rv.append(handleHttpMessage(oneUrl));
+		}
+		// TODO: provide the new credit to the listeners
+		System.out.println(rv.toString() + "\n");
+		
+		/*URLConnection urlConnection = url.openConnection();
+		urlConnection.addRequestProperty("user", "123456");
+		urlConnection.addRequestProperty("password", "abcdefg");*/
+		
+		
+		//tv1.append("Balance: " + this.handleBalanceMessage() + "\n");
+	}
+	
+	private void method_update_lines() {
+		android.util.Log.d(TAG, "method_update_lines entered");
+	}
+	
+	private void method_update_CallLog() {
+		android.util.Log.d(TAG, "method_update_CallLog entered");
+	}
+	
+	private void method_update_data() {
+		android.util.Log.d(TAG, "method_update_data entered");
+	}
+	
 }
