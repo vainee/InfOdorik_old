@@ -234,7 +234,7 @@ public class MainActivity extends ActionBarActivity {
 	}
 	
 
-	
+
 	private class HttpHandlerLocal extends AsyncTask<URL, Integer, String> {
 
 		@Override
@@ -249,26 +249,10 @@ public class MainActivity extends ActionBarActivity {
 		@Override
 		protected void onPostExecute(String result) {
 			TextView tv1 = (TextView) findViewById(R.id.textView1);
-/*			Float balance;
-			try {
-				balance = Float.parseFloat(result);
-			}
-			catch (NumberFormatException exception) {
-				
-				return;
-			}
-*/
 			
 			tv1.getContext();
 			// store the value for the next time when we will be offline (synchronization outage)
 			//Context context = getActivity();
-			/*
-			SharedPreferences sharedPref = tv1.getContext().getSharedPreferences(
-			        getString(R.string.preference_file_key), Context.MODE_PRIVATE);
-			SharedPreferences.Editor editor = sharedPref.edit();
-			editor.putFloat("balance", balance);
-			editor.commit();
-			*/
 			
 			tv1.append(result + "\n");
 		}

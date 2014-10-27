@@ -3,16 +3,22 @@
  */
 package cz.vainee.infodorik;
 
-import cz.vainee.infodorik.MainActivity.HttpHandlerLocal;
+import java.io.BufferedReader;
+import java.io.InputStreamReader;
+import java.net.HttpURLConnection;
+import java.net.MalformedURLException;
+import java.net.URL;
+
 import android.app.IntentService;
-import android.app.Notification;
 import android.app.NotificationManager;
 import android.app.PendingIntent;
 import android.app.TaskStackBuilder;
+import android.content.Context;
 import android.content.Intent;
+import android.content.SharedPreferences;
+import android.os.AsyncTask;
+import android.preference.PreferenceManager;
 import android.support.v4.app.NotificationCompat;
-import android.widget.TextView;
-import android.widget.Toast;
 
 /**
  * @author vainee
@@ -73,12 +79,12 @@ public class InfOdorikService extends IntentService {
 		// Select the appropriate method
 		String method = intent.getStringExtra(SERVICE_METHOD);
 		if (method == SERVICE_METHOD_UPDATE)
-			
-				;
-				break;
-			default:
-				;
-				break;
+		{
+			method_update();
+		}
+		else
+		{
+			// unknown method
 		}
 		
 
@@ -115,7 +121,7 @@ public class InfOdorikService extends IntentService {
 		        );
 		serviceNotificationBuilder.setContentIntent(resultPendingIntent);
 		NotificationManager mNotificationManager =
-		    (NotificationManager) getSystemService(getBaseContext().NOTIFICATION_SERVICE);
+		    (NotificationManager) getSystemService(Context.NOTIFICATION_SERVICE);
 		// mId allows you to update the notification later on.
 		int mId = 0;
 		mNotificationManager.notify(mId, serviceNotificationBuilder.build());
@@ -173,14 +179,6 @@ public class InfOdorikService extends IntentService {
 			android.util.Log.e(TAG, "Unknown credit request(" + e.getMessage() + ")", e);
 		}
 		
-		// try to get the credit
-		StringBuilder rv = new StringBuilder();
-		for (URL oneUrl : params) {
-			rv.append(handleHttpMessage(oneUrl));
-		}
-		// TODO: provide the new credit to the listeners
-		System.out.println(rv.toString() + "\n");
-		
 		/*URLConnection urlConnection = url.openConnection();
 		urlConnection.addRequestProperty("user", "123456");
 		urlConnection.addRequestProperty("password", "abcdefg");*/
@@ -199,6 +197,73 @@ public class InfOdorikService extends IntentService {
 	
 	private void method_update_data() {
 		android.util.Log.d(TAG, "method_update_data entered");
+	}
+	
+	private class HttpHandlerLocal extends AsyncTask<URL, Integer, String> {
+
+		@Override
+		protected String doInBackground(URL... params) {
+			StringBuilder rv = new StringBuilder();
+			for (URL oneUrl : params) {
+				rv.append(handleHttpMessage(oneUrl));
+			}
+			return rv.toString();
+		}
+		
+		@Override
+		protected void onPostExecute(String result) {
+//			TextView tv1 = (TextView) findViewById(R.id.textView1);
+/*			Float balance;
+			try {
+				balance = Float.parseFloat(result);
+			}
+			catch (NumberFormatException exception) {
+				
+				return;
+			}
+*/
+			
+//			tv1.getContext();
+			// store the value for the next time when we will be offline (synchronization outage)
+			//Context context = getActivity();
+			/*
+			SharedPreferences sharedPref = tv1.getContext().getSharedPreferences(
+			        getString(R.string.preference_file_key), Context.MODE_PRIVATE);
+			SharedPreferences.Editor editor = sharedPref.edit();
+			editor.putFloat("balance", balance);
+			editor.commit();
+			*/
+			
+//			tv1.append(result + "\n");
+		}
+		
+		private String handleHttpMessage(URL url) {
+			StringBuilder rv = new StringBuilder();
+			
+			try {
+				HttpURLConnection urlConnection = (HttpURLConnection) url.openConnection();
+
+				BufferedReader inBufReader = new BufferedReader(new InputStreamReader(
+						urlConnection.getInputStream()));
+				String inputLine;
+				while ((inputLine = inBufReader.readLine()) != null)
+				{
+					//System.out.println(inputLine);
+					rv.append(inputLine + "\n");
+				}
+				urlConnection.disconnect();
+			}
+			catch (Exception e)
+			{
+				System.out.println(e.getMessage());
+			}
+
+			if (rv.length()>0)
+				return rv.toString();
+			else
+				return "-----";
+		}
+	
 	}
 	
 }
