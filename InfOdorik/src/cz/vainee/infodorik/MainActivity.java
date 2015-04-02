@@ -152,7 +152,7 @@ public class MainActivity extends ActionBarActivity {
 			String username = prefs.getString("pref_username", "");
 			String passw = prefs.getString("pref_password", "");
 
-			StringBuilder urlBuilder = new StringBuilder("https://www.odorik.cz/api/v1/lines?user=");
+			StringBuilder urlBuilder = new StringBuilder("https://www.odorik.cz/api/v1/lines.json?user=");
 			urlBuilder.append(username);
 			urlBuilder.append("&password=");
 			urlBuilder.append(passw);
@@ -196,7 +196,8 @@ public class MainActivity extends ActionBarActivity {
 			urlBuilder.append(username);
 			urlBuilder.append("&password=");
 			urlBuilder.append(passw);
-			urlBuilder.append("&from=2014-07-20T00:00:00&to=2014-07-31T23:59:59");
+			urlBuilder.append("&from=2014-07-20T00:00:00");
+			urlBuilder.append("&to=2014-07-31T23:59:59");
 			URL odorikUrl = new URL(urlBuilder.toString());
 			
 			//System.out.println(urlBuilder.toString());
@@ -227,6 +228,7 @@ public class MainActivity extends ActionBarActivity {
 		tv1.append("Starting the service ... ");
 		
 		Intent startServiceIntent = new Intent(this, InfOdorikService.class);
+		startServiceIntent.putExtra(InfOdorikService.SERVICE_METHOD, InfOdorikService.SERVICE_METHOD_UPDATE);
 		this.startService(startServiceIntent);
 		
 		tv1.append("the service was hopefully started.\n");

@@ -16,12 +16,13 @@ import android.app.TaskStackBuilder;
 import android.content.Context;
 import android.content.Intent;
 import android.content.SharedPreferences;
-import android.os.AsyncTask;
+//import android.os.AsyncTask;
 import android.preference.PreferenceManager;
 import android.support.v4.app.NotificationCompat;
+import android.text.format.Time;
 
 /**
- * @author vainee
+ * @author Pavel Vejnarek
  *
  */
 public class InfOdorikService extends IntentService {
@@ -33,11 +34,19 @@ public class InfOdorikService extends IntentService {
 	// TODO: completely replace with API class
 	private static final String API_URL = "https://www.odorik.cz/api/v1/";
 	
+	// API resource IDs
+	private static final String RESOURCE_CREDIT = "balance";
+	private static final String RESOURCE_LINES = "lines.json";
+	private static final String RESOURCE_CALLS = "calls.json";
+	
+	
 	// Service interface definition
 	public static final String SERVICE_METHOD = "method";
 	// TODO: temporary, define methods using enum
 	public static final String SERVICE_METHOD_UPDATE = "update";
 	
+	//
+	private static final String XML_SCHEMA_DATETIME_FORMAT = "yyyy-MM-ddTHH:mm:ss+Z";
 	
 /*	@Override
 	  public int onStartCommand(Intent intent, int flags, int startId) {
@@ -78,7 +87,7 @@ public class InfOdorikService extends IntentService {
 		
 		// Select the appropriate method
 		String method = intent.getStringExtra(SERVICE_METHOD);
-		if (method == SERVICE_METHOD_UPDATE)
+		if (method.equals(SERVICE_METHOD_UPDATE))
 		{
 			method_update();
 		}
@@ -155,115 +164,128 @@ public class InfOdorikService extends IntentService {
 	
 	private void method_update_credit() {
 		android.util.Log.d(TAG, "method_update_credit entered");
-		
-//		TextView tv1 = (TextView) findViewById(R.id.textView1);
-//		tv1.append("Checking your balance ... ");
-		
 		try {
-			SharedPreferences prefs = PreferenceManager.getDefaultSharedPreferences(this);
-
-			String username = prefs.getString("pref_username", "");
-			String passw = prefs.getString("pref_password", "");
-
-			StringBuilder urlBuilder = new StringBuilder(API_URL);
-			urlBuilder.append("balance?user=");
-			urlBuilder.append(username);
-			urlBuilder.append("&password=");
-			urlBuilder.append(passw);
-			URL odorikUrl = new URL(urlBuilder.toString());
-			
-			new HttpHandlerLocal().execute(odorikUrl);
+			StringBuilder urlBuilder = initWithCredentials(RESOURCE_CREDIT);
+			URL creditUrl = new URL(urlBuilder.toString());
+			String result = handleHttpMessage(creditUrl);
+			android.util.Log.d(TAG, "Credit fetched by the service: " + result);
 		}
 		catch (MalformedURLException e)
 		{
-			android.util.Log.e(TAG, "Unknown credit request(" + e.getMessage() + ")", e);
+			android.util.Log.e(TAG, "Unknown request(" + e.getMessage() + ")", e);
 		}
-		
-		/*URLConnection urlConnection = url.openConnection();
-		urlConnection.addRequestProperty("user", "123456");
-		urlConnection.addRequestProperty("password", "abcdefg");*/
-		
-		
-		//tv1.append("Balance: " + this.handleBalanceMessage() + "\n");
 	}
 	
 	private void method_update_lines() {
 		android.util.Log.d(TAG, "method_update_lines entered");
+		try {
+			StringBuilder urlBuilder = initWithCredentials(RESOURCE_LINES);
+			URL creditUrl = new URL(urlBuilder.toString());
+			String result = handleHttpMessage(creditUrl);
+			android.util.Log.d(TAG, "Lines fetched by the service: " + result);
+		}
+		catch (MalformedURLException e)
+		{
+			android.util.Log.e(TAG, "Unknown request(" + e.getMessage() + ")", e);
+		}
 	}
 	
 	private void method_update_CallLog() {
 		android.util.Log.d(TAG, "method_update_CallLog entered");
+		try {
+			StringBuilder urlBuilder = initWithCredentials(RESOURCE_CALLS);
+			
+//			SimpleDateFormat sdf = new SimpleDateFormat(XML_SCHEMA_DATETIME_FORMAT, Locale.US);
+//			StringBuilder dateTo.format("%30s %s\n", XML_SCHEMA_DATETIME_FORMAT, sdf.format(new Date(0)));
+
+			// solution of date handling inspired by:
+			// http://stackoverflow.com/questions/3747490/android-get-date-before-7-days-one-week
+			Time timeTo = new Time();
+			timeTo.set(System.currentTimeMillis());
+			String timeToFormatted =  timeTo.format("%Y-%m-%dT%H:%M:%S");
+
+			Time timeFrom = new Time();
+			long timeFromMillis = System.currentTimeMillis() - (7 * 24 * 60 * 60 * 1000); // seven days ago
+			timeFrom.set(timeFromMillis);
+			// get the whole day
+			timeFrom.hour = 0;
+			timeFrom.minute = 0;
+			timeFrom.second = 0;
+			String timeFromFormatted = timeFrom.format("%Y-%m-%dT%H:%M:%S");
+			 
+
+			System.out.println("Service timeFromFormatted: " + timeFromFormatted +
+					", to: " + timeToFormatted);
+			android.util.Log.d(TAG, "Service timeFromFormatted: " + timeFromFormatted +
+					", to: " + timeToFormatted);
+			urlBuilder.append("&from=" /*"2013-01-01T00:00:00"*/ + timeFromFormatted);
+			urlBuilder.append("&to=" /*"2015-01-01T23:59:59"*/ + timeToFormatted);
+			urlBuilder.append("&page_size=30");
+			urlBuilder.append("&page=1");
+			
+			URL creditUrl = new URL(urlBuilder.toString());
+			String result = handleHttpMessage(creditUrl);
+			android.util.Log.d(TAG, "Calls fetched by the service: " + result);
+			System.out.println("Calls fetched by the service: " + result);
+		}
+		catch (MalformedURLException e)
+		{
+			android.util.Log.e(TAG, "Unknown request(" + e.getMessage() + ")", e);
+		}
 	}
 	
 	private void method_update_data() {
 		android.util.Log.d(TAG, "method_update_data entered");
-	}
+	} //method_update_data
 	
-	private class HttpHandlerLocal extends AsyncTask<URL, Integer, String> {
+	/**
+	 * @param resourceName resource string identifier to be used during URI construction
+	 * @return URI stringBuilder with the URL full path and credentials already included
+	 */
+	private StringBuilder initWithCredentials(String resourceName)
+	{
+		// get the credentials from the APP user preferences
+		SharedPreferences prefs = PreferenceManager
+				.getDefaultSharedPreferences(this);
+		String username = prefs.getString("pref_username", "");
+		String passw = prefs.getString("pref_password", "");
 
-		@Override
-		protected String doInBackground(URL... params) {
-			StringBuilder rv = new StringBuilder();
-			for (URL oneUrl : params) {
-				rv.append(handleHttpMessage(oneUrl));
-			}
-			return rv.toString();
-		}
+		// construct the URI
+		StringBuilder urlBuilder = new StringBuilder(API_URL);
+		urlBuilder.append(resourceName);
+		urlBuilder.append("?user=");
+		urlBuilder.append(username);
+		urlBuilder.append("&password=");
+		urlBuilder.append(passw);
 		
-		@Override
-		protected void onPostExecute(String result) {
-//			TextView tv1 = (TextView) findViewById(R.id.textView1);
-/*			Float balance;
-			try {
-				balance = Float.parseFloat(result);
-			}
-			catch (NumberFormatException exception) {
-				
-				return;
-			}
-*/
-			
-//			tv1.getContext();
-			// store the value for the next time when we will be offline (synchronization outage)
-			//Context context = getActivity();
-			/*
-			SharedPreferences sharedPref = tv1.getContext().getSharedPreferences(
-			        getString(R.string.preference_file_key), Context.MODE_PRIVATE);
-			SharedPreferences.Editor editor = sharedPref.edit();
-			editor.putFloat("balance", balance);
-			editor.commit();
-			*/
-			
-//			tv1.append(result + "\n");
-		}
+		return urlBuilder;
+	} // initWithCredentials
+	
+	private String handleHttpMessage(URL url) {
+		StringBuilder rv = new StringBuilder();
 		
-		private String handleHttpMessage(URL url) {
-			StringBuilder rv = new StringBuilder();
-			
-			try {
-				HttpURLConnection urlConnection = (HttpURLConnection) url.openConnection();
+		try {
+			HttpURLConnection urlConnection = (HttpURLConnection) url.openConnection();
 
-				BufferedReader inBufReader = new BufferedReader(new InputStreamReader(
-						urlConnection.getInputStream()));
-				String inputLine;
-				while ((inputLine = inBufReader.readLine()) != null)
-				{
-					//System.out.println(inputLine);
-					rv.append(inputLine + "\n");
-				}
-				urlConnection.disconnect();
-			}
-			catch (Exception e)
+			BufferedReader inBufReader = new BufferedReader(new InputStreamReader(
+					urlConnection.getInputStream()));
+			String inputLine;
+			while ((inputLine = inBufReader.readLine()) != null)
 			{
-				System.out.println(e.getMessage());
+				//System.out.println(inputLine);
+				rv.append(inputLine + "\n");
 			}
-
-			if (rv.length()>0)
-				return rv.toString();
-			else
-				return "-----";
+			urlConnection.disconnect();
 		}
-	
-	}
-	
-}
+		catch (Exception e)
+		{
+			System.out.println(e.getMessage());
+		}
+
+		if (rv.length()>0)
+			return rv.toString();
+		else
+			return "-----";
+	} // handleHttpMessage
+
+} // InfOdorikService
